@@ -9,6 +9,7 @@
     "dev": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/index"
   },
   "dependencies": {
+    "@prisma/client": "^4.3.1",
     "dotenv": "^16.0.2",
     "express": "^4.18.1"
   },
@@ -24,6 +25,7 @@
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-promise": "^6.0.0",
     "prettier": "^2.7.1",
+    "prisma": "^4.3.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "*"
   }
