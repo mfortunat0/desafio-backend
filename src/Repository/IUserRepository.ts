@@ -1,4 +1,4 @@
-import { UserDTO } from "../User/UserDTO";
+import { UserDTO } from "../User/dtos/UserDTO";
 
 export interface IUserRepository {
   findOneById(id: string): Promise<UserDTO>;

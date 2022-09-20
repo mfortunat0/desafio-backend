@@ -1,3 +1,5 @@
+import { TransactionDTO } from "../../Transaction/dtos/TransactionDTO";
+
 export interface UserDTO {
   id?: string;
   name: string;
@@ -5,4 +7,5 @@ export interface UserDTO {
   birthday: Date;
   created_at?: Date;
   updated_at?: Date;
+  transactions?: TransactionDTO[];
 }

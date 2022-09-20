@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { AppError } from "../Errors/AppError";
-import { UserDTO } from "../User/UserDTO";
+import { UserDTO } from "../User/dtos/UserDTO";
 import { IUserRepository } from "./IUserRepository";
 
 export class UserRepository implements IUserRepository {

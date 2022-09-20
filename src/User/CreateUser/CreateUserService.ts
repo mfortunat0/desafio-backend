@@ -1,6 +1,6 @@
 import { IUserRepository } from "../../Repository/IUserRepository";
 import { UserRepository } from "../../Repository/UserRepository";
-import { UserDTO } from "../UserDTO";
+import { UserDTO } from "../dtos/UserDTO";
 
 export class CreateUserService {
   private userRepository: IUserRepository;
