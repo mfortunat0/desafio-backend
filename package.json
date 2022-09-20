@@ -6,7 +6,8 @@
   "author": "matheus <matheus.xmaz10@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "dev": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/index"
+    "dev": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/index",
+    "build": "tsc --build"
   },
   "dependencies": {
     "@prisma/client": "^4.3.1",
