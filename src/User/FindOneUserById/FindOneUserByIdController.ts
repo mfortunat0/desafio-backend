@@ -6,6 +6,6 @@ export class FindOneUserByIdController {
     const { id } = request.params;
     const findOneUserByIdService = new FindOneUserByIdService();
     const user = await findOneUserByIdService.execute(id);
-    return response.json(user);
+    return response.json({ user });
   }
 }
