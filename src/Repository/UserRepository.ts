@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { prisma } from "../database/PrismaClient";
 import { AppError } from "../Errors/AppError";
 import { UserDTO } from "../User/dtos/UserDTO";
 import { IUserRepository } from "./IUserRepository";
@@ -6,7 +7,7 @@ import { IUserRepository } from "./IUserRepository";
 export class UserRepository implements IUserRepository {
   private client: PrismaClient;
   constructor() {
-    this.client = new PrismaClient();
+    this.client = prisma;
   }
 
   async findAll(): Promise<UserDTO[]> {
@@ -17,7 +18,18 @@ export class UserRepository implements IUserRepository {
     });
   }
 
+  async findOneByEmail(email: string): Promise<UserDTO | null> {
+    return await this.client.user.findFirst({
+      where: {
+        email,
+      },
+    });
+  }
+
   async findOneById(id: string): Promise<UserDTO> {
+    if (!id) {
+      throw new AppError("User not exists", 400);
+    }
     const user = await this.client.user.findUnique({
       where: {
         id,
@@ -31,7 +43,12 @@ export class UserRepository implements IUserRepository {
     return user;
   }
 
-  async createUser({ name, email, birthday }: UserDTO): Promise<UserDTO> {
+  async createUser({
+    name,
+    email,
+    password,
+    birthday,
+  }: UserDTO): Promise<UserDTO> {
     const userAlreadyExists = await this.client.user.findFirst({
       where: {
         email,
@@ -42,7 +59,7 @@ export class UserRepository implements IUserRepository {
       throw new AppError("User already exists", 400);
     }
 
-    const user: UserDTO = { name, email, birthday };
+    const user: UserDTO = { name, email, password, birthday };
     return await this.client.user.create({
       data: user,
     });
