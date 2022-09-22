@@ -9,7 +9,8 @@
     "dev": "tsnd --respawn --inspect --exit-child --transpile-only --ignore-watch node_modules src/index",
     "build": "tsc --build",
     "lint": "eslint --fix src/**.ts",
-    "seed": "ts-node src/database/Seed.ts"
+    "seed": "ts-node src/database/Seed.ts",
+    "seed:test": "ts-node src/database/SeedTest.ts"
   },
   "dependencies": {
     "@prisma/client": "^4.3.1",
