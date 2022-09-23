@@ -1,24 +1,46 @@
+import { TranscationType } from "@prisma/client";
+import { AppError } from "../../Errors/AppError";
 import { ITransactionRepository } from "../../Repository/ITransactionRepository";
+import { IUserRepository } from "../../Repository/IUserRepository";
 import { TransactionRepository } from "../../Repository/TransactionRepository";
-import { TransactionDTO } from "../dtos/TransactionDTO";
+import { UserRepository } from "../../Repository/UserRepository";
+import { formatToCsv } from "../util/FormatTransactionToCsv";
+
+interface IReportAllTransactionByUserIdServiceProps {
+  id: string;
+}
 
 export class ReportAllTransactionByUserIdService {
   private transactionRepository: ITransactionRepository;
+  private userRepository: IUserRepository;
   constructor() {
     this.transactionRepository = new TransactionRepository();
+    this.userRepository = new UserRepository();
   }
 
-  async execute(id: string) {
+  async execute({ id }: IReportAllTransactionByUserIdServiceProps) {
+    const user = await this.userRepository.findOneById(id);
+
+    if (!user) {
+      throw new AppError("User not exists", 400);
+    }
+
     const transactions =
       await this.transactionRepository.findAllTransactionByUserId(id);
-    return this.formatToCsv(transactions);
-  }
 
-  private formatToCsv(stream: TransactionDTO[]) {
-    let csv = "id,userId,value,type\n";
-    stream.forEach((obj, index) => {
-      csv += `${obj.id},${obj.userId},${obj.value},${obj.type}\n`;
+    let total = 0;
+    transactions.forEach((transaction) => {
+      if (
+        transaction.type === TranscationType.DEBITO ||
+        transaction.type === TranscationType.ESTORNO
+      ) {
+        total += transaction.value;
+      } else {
+        total -= transaction.value;
+      }
     });
-    return csv;
+    total += user.openingBalance;
+
+    return { csv: formatToCsv(transactions), total, user };
   }
 }
