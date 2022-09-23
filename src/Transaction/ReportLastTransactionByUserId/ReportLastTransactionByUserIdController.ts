@@ -1,14 +1,16 @@
 import { Request, Response } from "express";
-import { ReportAllTransactionByUserIdService } from "./ReportAllTransactionByUserIdService";
+import { ReportLastTransactionByUserIdService } from "./ReportLastTransactionByUserIdService";
 
-export class ReportAllTransactionByUserIdController {
+export class ReportLastTransactionByUserIdController {
   async handle(request: Request, response: Response) {
     const { id } = request.params;
-    const reportAllTransactionByIdService =
-      new ReportAllTransactionByUserIdService();
-    const { csv, total, user } = await reportAllTransactionByIdService.execute({
-      id,
-    });
+    const reportLastTransactionByIdService =
+      new ReportLastTransactionByUserIdService();
+    const { csv, total, user } = await reportLastTransactionByIdService.execute(
+      {
+        id,
+      }
+    );
     response.set({
       "content-Type": "text/csv",
       "Client-balance": total,
