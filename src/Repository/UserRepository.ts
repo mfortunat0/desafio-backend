@@ -1,7 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import { prisma } from "../database/PrismaClient";
+import { redis } from "../database/RedisClient";
 import { AppError } from "../Errors/AppError";
-import { UserDTO } from "../User/dtos/UserDTO";
+import { UserDTO, UserInsertDTO } from "../User/dtos/UserDTO";
 import { IUserRepository } from "./IUserRepository";
 
 export class UserRepository implements IUserRepository {
@@ -11,11 +12,26 @@ export class UserRepository implements IUserRepository {
   }
 
   async findAll(): Promise<UserDTO[]> {
-    return await this.client.user.findMany({
+    const usersCache = await redis.get("allUsers");
+
+    if (usersCache) {
+      return JSON.parse(usersCache);
+    }
+
+    const users = await this.client.user.findMany({
       orderBy: {
         id: "desc",
       },
     });
+    const usersWithOutPassword = users.map((user) => {
+      const { password, ...userWithOutPassowrd } = user;
+      return userWithOutPassowrd;
+    });
+
+    redis.set("allUsers", JSON.stringify(usersWithOutPassword), {
+      EX: 60,
+    });
+    return usersWithOutPassword;
   }
 
   async findOneByEmail(email: string): Promise<UserDTO | null> {
@@ -48,7 +64,8 @@ export class UserRepository implements IUserRepository {
     email,
     password,
     birthday,
-  }: UserDTO): Promise<UserDTO> {
+    openingBalance,
+  }: UserInsertDTO): Promise<UserDTO> {
     const userAlreadyExists = await this.client.user.findFirst({
       where: {
         email,
@@ -59,10 +76,18 @@ export class UserRepository implements IUserRepository {
       throw new AppError("User already exists", 400);
     }
 
-    const user: UserDTO = { name, email, password, birthday };
-    return await this.client.user.create({
+    const user: UserInsertDTO = {
+      name,
+      email,
+      password,
+      birthday,
+      openingBalance,
+    };
+    const newUser = await this.client.user.create({
       data: user,
     });
+    const { password: hidePassword, ...newUserWithOutPassword } = newUser;
+    return newUserWithOutPassword;
   }
 
   async remove(id: string): Promise<void> {

@@ -1,7 +1,11 @@
 import { PrismaClient, TranscationType } from "@prisma/client";
 import { prisma } from "../database/PrismaClient";
+import { redis } from "../database/RedisClient";
 import { AppError } from "../Errors/AppError";
-import { TransactionDTO } from "../Transaction/dtos/TransactionDTO";
+import {
+  TransactionDTO,
+  TransactionInsertDTO,
+} from "../Transaction/dtos/TransactionDTO";
 import { ITransactionRepository } from "./ITransactionRepository";
 
 export class TransactionRepository implements ITransactionRepository {
@@ -14,7 +18,7 @@ export class TransactionRepository implements ITransactionRepository {
     type,
     value,
     userId,
-  }: TransactionDTO): Promise<TransactionDTO> {
+  }: TransactionInsertDTO): Promise<TransactionDTO> {
     const user = await this.client.user.findUnique({ where: { id: userId } });
 
     if (!user) {
@@ -31,7 +35,20 @@ export class TransactionRepository implements ITransactionRepository {
     return transaction;
   }
 
+  async findOneTransactionById(id: string): Promise<TransactionDTO | null> {
+    return await this.client.transaction.findFirst({
+      where: {
+        id,
+      },
+    });
+  }
+
   async findAllTransactionByUserId(id: string): Promise<TransactionDTO[]> {
+    const transactionCache = await redis.get(`${id}-transactions`);
+
+    if (transactionCache) {
+      return JSON.parse(transactionCache);
+    }
     const transactions = await this.client.transaction.findMany({
       where: {
         userId: id,
@@ -43,7 +60,42 @@ export class TransactionRepository implements ITransactionRepository {
         user: true,
       },
     });
+
+    redis.set(`${id}-transactions`, JSON.stringify(transactions), {
+      EX: 60,
+    });
     return transactions;
+  }
+
+  async findAllTransactionPaginationByUserId(
+    id: string,
+    skip: number,
+    take: number
+  ): Promise<TransactionDTO[]> {
+    const transactions = await this.client.transaction.findMany({
+      where: {
+        userId: id,
+      },
+      take,
+      skip,
+      orderBy: {
+        id: "desc",
+      },
+      include: {
+        user: true,
+      },
+    });
+    const transactionsWithOutUserPassword = transactions.map(
+      (transactionOld) => {
+        const { user, ...transaction } = transactionOld;
+        const { password, ...userWithOutPassword } = user;
+        return {
+          ...transaction,
+          user: userWithOutPassword,
+        };
+      }
+    );
+    return transactionsWithOutUserPassword;
   }
 
   async remove(id: string): Promise<void> {
