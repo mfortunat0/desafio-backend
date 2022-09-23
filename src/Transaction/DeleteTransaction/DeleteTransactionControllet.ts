@@ -5,7 +5,7 @@ export class DeleteTransactionController {
   async handle(request: Request, response: Response) {
     const { id } = request.params;
     const deleteTransactionService = new DeleteTransactionService();
-    await deleteTransactionService.execute(id);
+    await deleteTransactionService.execute({ id });
     return response.status(204).json();
   }
 }
