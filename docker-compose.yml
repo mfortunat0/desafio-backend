@@ -15,7 +15,7 @@ services:
   database:
     image: mysql:5.7.39
     volumes:
-      - /mysql-data/:/var/lib/mysql
+      - ./mysql-data/:/var/lib/mysql
     environment:
       MYSQL_USER: ${DATABASE_USER}
       MYSQL_DATABASE: ${DATABASE_NAME}
